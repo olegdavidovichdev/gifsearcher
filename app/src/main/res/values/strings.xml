@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">GIF Searcher</string>
+
+    <string name="click_to_play">Click to Play</string>
+</resources>
