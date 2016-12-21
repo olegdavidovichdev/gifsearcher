@@ -1,4 +1,4 @@
-package com.example.gifsearcher.Network;
+package com.olegdavidovichdev.gifsearcher.Network;
 
 import android.content.Context;
 import android.net.ConnectivityManager;

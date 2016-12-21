@@ -1,11 +1,11 @@
-package com.example.gifsearcher;
+package com.olegdavidovichdev.gifsearcher;
 
 import android.app.ProgressDialog;
 
 /**
  * Created by Oleg on 30.09.2016.
  */
-public abstract class DialogCreator {
+public class DialogCreator {
 
     public static void onCreateDialog(ProgressDialog pg, String message) {
         pg.setMessage(message);

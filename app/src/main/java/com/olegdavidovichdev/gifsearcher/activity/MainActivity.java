@@ -1,4 +1,4 @@
-package com.example.gifsearcher.activity;
+package com.olegdavidovichdev.gifsearcher.activity;
 
 import android.app.ProgressDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -10,17 +10,17 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.example.gifsearcher.DialogCreator;
-import com.example.gifsearcher.Network.CheckNetwork;
-import com.example.gifsearcher.R;
-import com.example.gifsearcher.adapter.GifAdapter;
+import com.olegdavidovichdev.gifsearcher.DialogCreator;
+import com.olegdavidovichdev.gifsearcher.Network.CheckNetwork;
+import com.olegdavidovichdev.gifsearcher.R;
+import com.olegdavidovichdev.gifsearcher.adapter.GifAdapter;
 
 
-import com.example.gifsearcher.model.Gif;
-import com.example.gifsearcher.model.GifResponse;
+import com.olegdavidovichdev.gifsearcher.model.Gif;
+import com.olegdavidovichdev.gifsearcher.model.GifResponse;
 
-import com.example.gifsearcher.rest.ApiClient;
-import com.example.gifsearcher.rest.ApiInterface;
+import com.olegdavidovichdev.gifsearcher.rest.ApiClient;
+import com.olegdavidovichdev.gifsearcher.rest.ApiInterface;
 import com.arlib.floatingsearchview.FloatingSearchView;
 import com.arlib.floatingsearchview.suggestions.model.SearchSuggestion;
 

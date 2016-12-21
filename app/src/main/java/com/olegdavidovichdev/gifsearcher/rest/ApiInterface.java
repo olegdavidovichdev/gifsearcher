@@ -1,7 +1,7 @@
-package com.example.gifsearcher.rest;
+package com.olegdavidovichdev.gifsearcher.rest;
 
 
-import com.example.gifsearcher.model.GifResponse;
+import com.olegdavidovichdev.gifsearcher.model.GifResponse;
 
 import retrofit2.Call;
 import retrofit2.http.GET;

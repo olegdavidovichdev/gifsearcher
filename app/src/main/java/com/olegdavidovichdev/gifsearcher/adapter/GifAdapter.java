@@ -1,4 +1,4 @@
-package com.example.gifsearcher.adapter;
+package com.olegdavidovichdev.gifsearcher.adapter;
 
 import android.content.Context;
 import android.graphics.PorterDuff;
@@ -10,7 +10,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 
-import com.example.gifsearcher.R;
+import com.olegdavidovichdev.gifsearcher.R;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 import java.util.List;

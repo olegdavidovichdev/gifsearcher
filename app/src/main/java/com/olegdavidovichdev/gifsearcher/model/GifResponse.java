@@ -1,4 +1,4 @@
-package com.example.gifsearcher.model;
+package com.olegdavidovichdev.gifsearcher.model;
 
 
 import com.google.gson.annotations.Expose;

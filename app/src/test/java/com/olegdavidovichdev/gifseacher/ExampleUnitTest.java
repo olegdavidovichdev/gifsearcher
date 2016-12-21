@@ -1,4 +1,4 @@
-package com.example.gifsearcher;
+package com.olegdavidovichdev.gifsearcher;
 
 import org.junit.Test;
 

@@ -1,4 +1,4 @@
-package com.example.gifsearcher.rest;
+package com.olegdavidovichdev.gifsearcher.rest;
 
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
