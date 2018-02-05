@@ -1,183 +1,198 @@
 package com.olegdavidovichdev.gifsearcher.activity;
 
-import android.app.ProgressDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.olegdavidovichdev.gifsearcher.DialogCreator;
+import com.arlib.floatingsearchview.FloatingSearchView;
+import com.arlib.floatingsearchview.suggestions.model.SearchSuggestion;
 import com.olegdavidovichdev.gifsearcher.Network.CheckNetwork;
 import com.olegdavidovichdev.gifsearcher.R;
 import com.olegdavidovichdev.gifsearcher.adapter.GifAdapter;
-
-
 import com.olegdavidovichdev.gifsearcher.model.Gif;
 import com.olegdavidovichdev.gifsearcher.model.GifResponse;
-
+import com.olegdavidovichdev.gifsearcher.model.Images;
+import com.olegdavidovichdev.gifsearcher.model.Original;
+import com.olegdavidovichdev.gifsearcher.model.OriginalStill;
 import com.olegdavidovichdev.gifsearcher.rest.ApiClient;
 import com.olegdavidovichdev.gifsearcher.rest.ApiInterface;
-import com.arlib.floatingsearchview.FloatingSearchView;
-import com.arlib.floatingsearchview.suggestions.model.SearchSuggestion;
+import com.olegdavidovichdev.gifsearcher.rest.GiphyCallback;
+import com.olegdavidovichdev.gifsearcher.rest.GiphyConfig;
+import com.olegdavidovichdev.gifsearcher.rest.RequestListener;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = MainActivity.class.getSimpleName();
-    private static final String API_KEY = "dc6zaTOxFJmzC";
-    private static final String SUPPORT_LANGUAGE = "ru";
-    private static final String TAG_CALL = "CallGIF";
+public class MainActivity extends AppCompatActivity implements MainView, RequestListener,
+        AdapterView.OnItemClickListener, FloatingSearchView.OnSearchListener,
+        FloatingSearchView.OnMenuItemClickListener {
 
-    private FloatingSearchView floatingSearchView;
-    private GifAdapter gifSearchAdapter, gifTrendAdapter;
-    private ProgressDialog pg;
+    @BindView(R.id.floating_search_view) FloatingSearchView floatingSearchView;
+    @BindView(R.id.gif_list_view) ListView gifListView;
+    @BindView(R.id.progress_bar) ProgressBar progressBar;
+    private GifAdapter gifAdapter;
+
+    private GiphyCallback giphyCallback;
+
+    private List<String> previewList;
+    private List<String> gifList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
 
+        initializePreviewList();
+        gifListView.setOnItemClickListener(this);
+        floatingSearchView.setOnSearchListener(this);
+        floatingSearchView.setOnMenuItemClickListener(this);
 
-        final ListView gifListView = (ListView) findViewById(R.id.gif_list_view);
-        floatingSearchView = (FloatingSearchView) findViewById(R.id.floating_search_view);
-        pg = new ProgressDialog(this);
-
-        floatingSearchView.setOnMenuItemClickListener(new FloatingSearchView.OnMenuItemClickListener() {
-            @Override
-            public void onActionMenuItemSelected(MenuItem item) {
-                if (item.getItemId() == R.id.menu_item_trends) {
-
-                    if (!CheckNetwork.isInternetAvailable(MainActivity.this))
-                        Toast.makeText(MainActivity.this, "Please, check your Internet connection", Toast.LENGTH_SHORT).show();
-                    else DialogCreator.onCreateDialog(pg, "Загрузка данных ...");
-
-                    ApiInterface apiTrendService = ApiClient.getClient().create(ApiInterface.class);
-
-                    Call<GifResponse> call = apiTrendService.getTrendingGifs(API_KEY);
-                    call.enqueue(new Callback<GifResponse>() {
-                        @Override
-                        public void onResponse(Call<GifResponse> call, Response<GifResponse> response) {
-                            Log.d(TAG_CALL, call.request().toString());
-                            pg.hide();
-
-                            List<Gif> data = response.body().getData();
-
-                            final List<String> preview_trending_urls = new ArrayList<>();
-                            final List<String> gif_trending_urls = new ArrayList<>();
-
-                            for (Gif gif : data) {
-                                Gif.Images images = gif.getImages();
-
-                                Gif.Images.OriginalStill os = images.getOriginalStill();
-                                Gif.Images.Original o = images.getOriginal();
-
-                                String preview_trending_url = os.getUrl();
-                                String gif_trending_url = o.getUrl();
-
-                                preview_trending_urls.add(preview_trending_url);
-                                gif_trending_urls.add(gif_trending_url);
-                            }
-
-                            Log.d(TAG, preview_trending_urls.toString());
-                            Log.d(TAG, gif_trending_urls.toString());
-
-                            gifTrendAdapter = new GifAdapter(getApplicationContext(), preview_trending_urls);
-                            gifListView.setAdapter(gifTrendAdapter);
-
-                            gifListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                                @Override
-                                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                                    String s = gif_trending_urls.get(i);
-                                    preview_trending_urls.set(i, s);
-                                    gifTrendAdapter.notifyDataSetChanged();
-                                }
-                            });
-                        }
-
-                        @Override
-                        public void onFailure(Call<GifResponse> call, Throwable t) {
-                            Log.d(TAG, t.toString());
-                            pg.hide();
-                        }
-                    });
-                }
-            }
-        });
-
-
-        floatingSearchView.setOnSearchListener(new FloatingSearchView.OnSearchListener() {
-            @Override
-            public void onSuggestionClicked(SearchSuggestion searchSuggestion) {
-            }
-
-            @Override
-            public void onSearchAction(String currentQuery) {
-                if (!CheckNetwork.isInternetAvailable(MainActivity.this))
-                    Toast.makeText(MainActivity.this, "Please, check your Internet connection", Toast.LENGTH_SHORT).show();
-                else DialogCreator.onCreateDialog(pg, "Загрузка данных ...");
-
-                ApiInterface apiSearchService = ApiClient.getClient().create(ApiInterface.class);
-
-                Call<GifResponse> call = apiSearchService.getSearchGifs(currentQuery, API_KEY, SUPPORT_LANGUAGE);
-                call.enqueue(new Callback<GifResponse>() {
-                    @Override
-                    public void onResponse(Call<GifResponse> call, Response<GifResponse> response) {
-                        Log.d(TAG_CALL, call.request().toString());
-                        pg.hide();
-                        List<Gif> data = response.body().getData();
-                        if (data.isEmpty()) {
-                            Toast.makeText(MainActivity.this, "Gif's not found", Toast.LENGTH_SHORT).show();
-                        }
-
-                        final List<String> preview_search_urls = new ArrayList<>();
-                        final List<String> gif_search_urls = new ArrayList<>();
-
-                        for (Gif gif : data) {
-                            Gif.Images images = gif.getImages();
-
-                            Gif.Images.OriginalStill os = images.getOriginalStill();
-                            Gif.Images.Original o = images.getOriginal();
-
-                            String preview_search_url = os.getUrl();
-                            String gif_search_url = o.getUrl();
-
-                            preview_search_urls.add(preview_search_url);
-                            gif_search_urls.add(gif_search_url);
-                        }
-
-                        Log.d(TAG, preview_search_urls.toString());
-                        Log.d(TAG, gif_search_urls.toString());
-
-                        gifSearchAdapter = new GifAdapter(getApplicationContext(), preview_search_urls);
-                        gifListView.setAdapter(gifSearchAdapter);
-
-                        gifListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                            @Override
-                            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                                String s = gif_search_urls.get(i);
-                                preview_search_urls.set(i, s);
-                                gifSearchAdapter.notifyDataSetChanged();
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onFailure(Call<GifResponse> call, Throwable t) {
-                        Log.d(TAG, t.toString());
-                        pg.hide();
-                    }
-                });
-            }
-        });
+        if (CheckNetwork.isInternetAvailable(this)) {
+            onTrendingLoad();
+        } else {
+            showError(getString(R.string.connection_error));
+        }
     }
+
+    private void initializePreviewList() {
+        previewList = new ArrayList<>();
+        gifList = new ArrayList<>();
+        gifAdapter = new GifAdapter(this, previewList);
+        gifListView.setAdapter(gifAdapter);
+    }
+
+    @Override
+    public void onTrendingLoad() {
+        ApiInterface apiInterface = ApiClient.getApiInterface();
+
+        Call<GifResponse> call = apiInterface.getTrendingGifs(GiphyConfig.API_KEY);
+
+        if (giphyCallback == null) {
+            giphyCallback = new GiphyCallback(this);
+        }
+
+        if (CheckNetwork.isInternetAvailable(this)) {
+            progressBar.setVisibility(View.VISIBLE);
+            gifListView.setVisibility(View.GONE);
+            call.enqueue(giphyCallback);
+        } else {
+            showError(getString(R.string.connection_error));
+        }
+    }
+
+    @Override
+    public void onSearchLoad(String query) {
+        ApiInterface apiInterface = ApiClient.getApiInterface();
+
+        Call<GifResponse> call = apiInterface.getSearchGifs(query, GiphyConfig.API_KEY,
+                GiphyConfig.SUPPORT_LANGUAGE);
+
+        if (giphyCallback == null) {
+            giphyCallback = new GiphyCallback(this);
+        }
+
+        if (CheckNetwork.isInternetAvailable(this)) {
+            progressBar.setVisibility(View.VISIBLE);
+            gifListView.setVisibility(View.GONE);
+            call.enqueue(giphyCallback);
+        } else {
+            showError(getString(R.string.connection_error));
+        }
+    }
+
+    @Override
+    public void showError(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onSuccess(@NonNull List<Gif> listOfGifs) {
+        progressBar.setVisibility(View.GONE);
+        gifListView.setVisibility(View.VISIBLE);
+
+        clearLists();
+        gifListView.smoothScrollToPosition(0);
+
+        for (Gif gif : listOfGifs) {
+
+            Images images = gif.getImages();
+
+            OriginalStill os = images.getOriginalStill();
+            Original o = images.getOriginal();
+
+            String previewUrl = os.getUrl();
+            String gifUrl = o.getUrl();
+
+            previewList.add(previewUrl);
+            gifList.add(gifUrl);
+        }
+
+        gifAdapter.notifyDataSetChanged();
+    }
+
+    private void clearLists() {
+        if (!previewList.isEmpty()) {
+            previewList.clear();
+        }
+
+        if (!gifList.isEmpty()) {
+            gifList.clear();
+        }
+    }
+
+    @Override
+    public void onFailure(String message) {
+        progressBar.setVisibility(View.GONE);
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+        String gifUrl = gifList.get(i);
+        String previewUrl = previewList.get(i);
+
+        if (gifUrl != null && previewUrl != null) {
+            previewList.set(i, gifUrl);
+            gifList.set(i, previewUrl);
+            gifAdapter.notifyDataSetChanged();
+        } else {
+            showError(getString(R.string.gif_error));
+        }
+    }
+
+    @Override
+    public void onActionMenuItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.menu_item_trends) {
+            onTrendingLoad();
+        }
+    }
+
+    @Override
+    public void onSearchAction(String currentQuery) {
+        if (!TextUtils.isEmpty(currentQuery)) {
+            onSearchLoad(currentQuery);
+        } else {
+            showError(getString(R.string.input_error));
+        }
+
+    }
+
+    @Override
+    public void onSuggestionClicked(SearchSuggestion searchSuggestion) {
+        // ignored
+    }
+
 }

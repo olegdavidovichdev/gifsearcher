@@ -3,21 +3,32 @@ package com.olegdavidovichdev.gifsearcher.rest;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-/**
- * Created by Oleg on 21.09.2016.
- */
+
 public class ApiClient {
 
-    public static final String BASE_URL = "http://api.giphy.com/";
+    private static final String BASE_URL = "http://api.giphy.com/";
     private static Retrofit retrofit = null;
+    private static ApiInterface apiInterface = null;
 
-    public static Retrofit getClient() {
+    private static void getClient() {
         if (retrofit == null) {
             retrofit = new Retrofit.Builder()
                     .baseUrl(BASE_URL)
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
+
+            if (apiInterface == null) {
+                apiInterface = retrofit.create(ApiInterface.class);
+            }
         }
-        return retrofit;
     }
+
+    public static ApiInterface getApiInterface() {
+        if (apiInterface == null) {
+            getClient();
+        }
+
+        return apiInterface;
+    }
+
 }
