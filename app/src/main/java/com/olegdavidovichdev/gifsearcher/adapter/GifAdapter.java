@@ -1,80 +1,89 @@
 package com.olegdavidovichdev.gifsearcher.adapter;
 
-import android.content.Context;
-import android.graphics.PorterDuff;
-import android.util.Log;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
-import com.olegdavidovichdev.gifsearcher.R;
-import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
+import com.olegdavidovichdev.gifsearcher.R;
+import com.olegdavidovichdev.gifsearcher.RecyclerViewItemClickListener;
+import com.olegdavidovichdev.gifsearcher.model.RecyclerItem;
+import com.olegdavidovichdev.gifsearcher.utils.Converter;
+
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
-public class GifAdapter extends BaseAdapter {
 
-    private static final String TAG = GifAdapter.class.getSimpleName();
+public class GifAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    private Context context;
-    private LayoutInflater layoutInflater;
-    private List<String> urls;
+    private List<RecyclerItem> recyclerItems;
+    private RecyclerViewItemClickListener listener;
 
-    public GifAdapter(Context context, List<String> urls) {
-        this.context = context;
-        this.urls = urls;
-        layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    public GifAdapter(List<RecyclerItem> recyclerItems, RecyclerViewItemClickListener listener) {
+        this.recyclerItems = recyclerItems;
+        this.listener = listener;
     }
 
 
-    @Override
-    public int getCount() {
-        return urls.size();
-    }
+    public class GifHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-    @Override
-    public Object getItem(int i) {
-        return urls.get(i);
-    }
+        @BindView(R.id.full_layout) FrameLayout flFull;
+        @BindView(R.id.size_layout) RelativeLayout rlSize;
+        @BindView(R.id.gif_image_view) ImageView gif;
+        @BindView(R.id.layout_click_to_play) RelativeLayout rlClickToPlay;
+        @BindView(R.id.gif_size) TextView tvGifSize;
+        @BindView(R.id.user) TextView tvUser;
 
-    @Override
-    public long getItemId(int i) {
-        return i;
-    }
-
-    @Override
-    public View getView(int i, View view, ViewGroup viewGroup) {
-        View v = view;
-        if (v == null) {
-            v = layoutInflater.inflate(R.layout.list_item_gif, viewGroup, false);
+        GifHolder(View itemView) {
+            super(itemView);
+            ButterKnife.bind(this, itemView);
+            flFull.setOnClickListener(this);
         }
 
-        String url = (String) getItem(i);
-
-        ImageView gifImageView = (ImageView) v.findViewById(R.id.gif_image_view);
-        final ProgressBar progressBar = (ProgressBar) v.findViewById(R.id.progress_bar);
-        progressBar.setVisibility(View.VISIBLE);
-        progressBar.getIndeterminateDrawable()
-                .setColorFilter(context.getResources()
-                        .getColor(R.color.colorPrimary), PorterDuff.Mode.MULTIPLY);
-
-
-        Ion.with(gifImageView).load(url).setCallback(new FutureCallback<ImageView>() {
-            @Override
-            public void onCompleted(Exception e, ImageView result) {
-                progressBar.setVisibility(View.GONE);
+        @Override
+        public void onClick(View view) {
+            if (listener != null) {
+                listener.onRecyclerItemClicked(getAdapterPosition());
             }
-        });
-
-        Log.d(TAG, "url = " + url);
-
-        return v;
+        }
     }
 
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_gif, parent, false);
+        return new GifHolder(v);
+    }
 
+    @Override
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+        GifHolder gifHolder = (GifHolder) holder;
+        RecyclerItem ri = recyclerItems.get(position);
+
+        Ion.with(gifHolder.gif).load(ri.getPreviewUrl());
+
+        if (ri.isClicked()) {
+            gifHolder.rlClickToPlay.setVisibility(View.GONE);
+            gifHolder.rlSize.setVisibility(View.GONE);
+        } else {
+            gifHolder.rlClickToPlay.setVisibility(View.VISIBLE);
+            gifHolder.rlSize.setVisibility(View.VISIBLE);
+            gifHolder.tvGifSize.setText(gifHolder.tvGifSize.getContext().getString(R.string.gif_size,
+                    Converter.convertBToMB(ri.getGifSize())));
+        }
+
+        gifHolder.tvUser.setText(gifHolder.tvUser.getContext().getString(R.string.gif_user, ri.getUser()));
+    }
+
+    @Override
+    public int getItemCount() {
+        return recyclerItems.size();
+    }
 
 }

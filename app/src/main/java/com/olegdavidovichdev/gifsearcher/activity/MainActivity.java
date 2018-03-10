@@ -3,11 +3,11 @@ package com.olegdavidovichdev.gifsearcher.activity;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -15,12 +15,14 @@ import com.arlib.floatingsearchview.FloatingSearchView;
 import com.arlib.floatingsearchview.suggestions.model.SearchSuggestion;
 import com.olegdavidovichdev.gifsearcher.Network.CheckNetwork;
 import com.olegdavidovichdev.gifsearcher.R;
+import com.olegdavidovichdev.gifsearcher.RecyclerViewItemClickListener;
 import com.olegdavidovichdev.gifsearcher.adapter.GifAdapter;
 import com.olegdavidovichdev.gifsearcher.model.Gif;
 import com.olegdavidovichdev.gifsearcher.model.GifResponse;
 import com.olegdavidovichdev.gifsearcher.model.Images;
 import com.olegdavidovichdev.gifsearcher.model.Original;
 import com.olegdavidovichdev.gifsearcher.model.OriginalStill;
+import com.olegdavidovichdev.gifsearcher.model.RecyclerItem;
 import com.olegdavidovichdev.gifsearcher.rest.ApiClient;
 import com.olegdavidovichdev.gifsearcher.rest.ApiInterface;
 import com.olegdavidovichdev.gifsearcher.rest.GiphyCallback;
@@ -36,17 +38,17 @@ import retrofit2.Call;
 
 
 public class MainActivity extends AppCompatActivity implements MainView, RequestListener,
-        AdapterView.OnItemClickListener, FloatingSearchView.OnSearchListener,
-        FloatingSearchView.OnMenuItemClickListener {
+        FloatingSearchView.OnSearchListener, FloatingSearchView.OnMenuItemClickListener,
+        RecyclerViewItemClickListener {
 
     @BindView(R.id.floating_search_view) FloatingSearchView floatingSearchView;
-    @BindView(R.id.gif_list_view) ListView gifListView;
+    @BindView(R.id.recycler) RecyclerView recycler;
     @BindView(R.id.progress_bar) ProgressBar progressBar;
     private GifAdapter gifAdapter;
 
     private GiphyCallback giphyCallback;
 
-    private List<String> previewList;
+    private List<RecyclerItem> previewList;
     private List<String> gifList;
 
     @Override
@@ -56,7 +58,6 @@ public class MainActivity extends AppCompatActivity implements MainView, Request
         ButterKnife.bind(this);
 
         initializePreviewList();
-        gifListView.setOnItemClickListener(this);
         floatingSearchView.setOnSearchListener(this);
         floatingSearchView.setOnMenuItemClickListener(this);
 
@@ -70,8 +71,10 @@ public class MainActivity extends AppCompatActivity implements MainView, Request
     private void initializePreviewList() {
         previewList = new ArrayList<>();
         gifList = new ArrayList<>();
-        gifAdapter = new GifAdapter(this, previewList);
-        gifListView.setAdapter(gifAdapter);
+        gifAdapter = new GifAdapter(previewList, this);
+        LinearLayoutManager llm = new LinearLayoutManager(this);
+        recycler.setLayoutManager(llm);
+        recycler.setAdapter(gifAdapter);
     }
 
     @Override
@@ -86,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements MainView, Request
 
         if (CheckNetwork.isInternetAvailable(this)) {
             progressBar.setVisibility(View.VISIBLE);
-            gifListView.setVisibility(View.GONE);
+            recycler.setVisibility(View.GONE);
             call.enqueue(giphyCallback);
         } else {
             showError(getString(R.string.connection_error));
@@ -106,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements MainView, Request
 
         if (CheckNetwork.isInternetAvailable(this)) {
             progressBar.setVisibility(View.VISIBLE);
-            gifListView.setVisibility(View.GONE);
+            recycler.setVisibility(View.GONE);
             call.enqueue(giphyCallback);
         } else {
             showError(getString(R.string.connection_error));
@@ -121,10 +124,10 @@ public class MainActivity extends AppCompatActivity implements MainView, Request
     @Override
     public void onSuccess(@NonNull List<Gif> listOfGifs) {
         progressBar.setVisibility(View.GONE);
-        gifListView.setVisibility(View.VISIBLE);
+        recycler.setVisibility(View.VISIBLE);
 
         clearLists();
-        gifListView.smoothScrollToPosition(0);
+        recycler.smoothScrollToPosition(0);
 
         for (Gif gif : listOfGifs) {
 
@@ -136,7 +139,16 @@ public class MainActivity extends AppCompatActivity implements MainView, Request
             String previewUrl = os.getUrl();
             String gifUrl = o.getUrl();
 
-            previewList.add(previewUrl);
+            String userName;
+            if (gif.getUser() != null) {
+                userName = gif.getUser().getDisplayName();
+            } else {
+                userName = "Unknown";
+            }
+
+            RecyclerItem ri = new RecyclerItem(previewUrl, o.getSize(), userName, false);
+
+            previewList.add(ri);
             gifList.add(gifUrl);
         }
 
@@ -160,20 +172,6 @@ public class MainActivity extends AppCompatActivity implements MainView, Request
     }
 
     @Override
-    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-        String gifUrl = gifList.get(i);
-        String previewUrl = previewList.get(i);
-
-        if (gifUrl != null && previewUrl != null) {
-            previewList.set(i, gifUrl);
-            gifList.set(i, previewUrl);
-            gifAdapter.notifyDataSetChanged();
-        } else {
-            showError(getString(R.string.gif_error));
-        }
-    }
-
-    @Override
     public void onActionMenuItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_item_trends) {
             onTrendingLoad();
@@ -193,6 +191,21 @@ public class MainActivity extends AppCompatActivity implements MainView, Request
     @Override
     public void onSuggestionClicked(SearchSuggestion searchSuggestion) {
         // ignored
+    }
+
+    @Override
+    public void onRecyclerItemClicked(int position) {
+        String gifUrl = gifList.get(position);
+        RecyclerItem ri = previewList.get(position);
+
+        if (gifUrl != null && ri.getPreviewUrl() != null) {
+            gifList.set(position, ri.getPreviewUrl());
+            ri.setPreviewUrl(gifUrl);
+            ri.setClicked(!ri.isClicked());
+            gifAdapter.notifyItemChanged(position);
+        } else {
+            showError(getString(R.string.gif_error));
+        }
     }
 
 }

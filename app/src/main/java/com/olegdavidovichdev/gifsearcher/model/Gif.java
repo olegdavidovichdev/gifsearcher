@@ -39,10 +39,16 @@ public class Gif {
     private String trendingDatetime;
     @SerializedName("images")
     private Images images;
+    @SerializedName("user")
+    private User user;
 
 
     public Images getImages() {
         return images;
+    }
+
+    public User getUser() {
+        return user;
     }
 
 }

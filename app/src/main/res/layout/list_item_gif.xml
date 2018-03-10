@@ -1,37 +1,98 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:tools="http://schemas.android.com/tools"
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/full_layout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_gravity="center_horizontal"
-    android:orientation="vertical"
-    android:id="@+id/gif_rel_layout">
+    android:layout_marginBottom="2dp"
+    android:orientation="vertical">
 
-        <RelativeLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-
-        <ProgressBar
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_centerInParent="true"
-            android:id="@+id/progress_bar"/>
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
 
         <ImageView
+            android:id="@+id/gif_image_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/gif_image_view"
             android:adjustViewBounds="true"
-            tools:src="@mipmap/ic_launcher" />
-        </RelativeLayout>
+            tools:background="@color/white"
+            tools:ignore="ContentDescription" />
+    </RelativeLayout>
 
-
-    <TextView
-        android:layout_width="match_parent"
+    <RelativeLayout
+        android:id="@+id/layout_click_to_play"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/click_to_play"
-        android:textColor="@color/colorPrimary"
-        android:gravity="center_horizontal" />
+        android:layout_gravity="center">
 
-</LinearLayout>
+        <ImageView
+            android:id="@+id/play_icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_centerHorizontal="true"
+            android:alpha="0.5"
+            android:src="@drawable/ic_play"
+            tools:ignore="ContentDescription" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/play_icon"
+            android:gravity="center_horizontal"
+            android:text="@string/click_to_play"
+            android:textColor="@color/white_transparent"
+            android:textSize="20sp" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="5dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginStart="5dp"
+        android:background="@drawable/black_opacity_background"
+        android:paddingEnd="5dp"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:paddingStart="5dp">
+
+        <TextView
+            android:id="@+id/user"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="by NFL"
+            android:textColor="@color/white"
+            android:textSize="12sp" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/size_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginEnd="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="5dp"
+        android:background="@drawable/black_opacity_background"
+        android:paddingEnd="5dp"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:paddingStart="5dp">
+
+        <TextView
+            android:id="@+id/gif_size"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            tools:text="45923020 kB" />
+
+    </RelativeLayout>
+
+</FrameLayout>
